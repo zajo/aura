@@ -1,0 +1,2 @@
+option('aura_glfw_example',type:'boolean',value:false,description:'Build the GLFW example (requires GLFW to be installed)')
+option('aura_enable_unit_tests',type:'boolean',value:true,description:'Enable the building of unit test programs')
