@@ -19,8 +19,8 @@ compile _hpp_compile_attribute_test.cpp ../build//headers ;
 compile _hpp_compile_aura_test.cpp ../build//headers ;
 compile _hpp_compile_config_test.cpp ../build//headers ;
 compile _hpp_compile_emit_test.cpp ../build//headers ;
-compile _hpp_compile_event_test.cpp ../build//headers ;
 compile _hpp_compile_meta_test.cpp ../build//headers ;
+compile _hpp_compile_event_test.cpp ../build//headers ;
 compile _hpp_compile_mute_test.cpp ../build//headers ;
 compile _hpp_compile_subscribe_test.cpp ../build//headers ;
 compile _hpp_compile_thread_affinity_test.cpp ../build//headers ;
@@ -50,7 +50,11 @@ run shutdown9_test.cpp ../build//aura ;
 
 run ct_attr_test.cpp ../build//aura : : : <threading>multi ;
 run ct_basic_test.cpp ../build//aura : : : <threading>multi ;
-run ct_lambda_test.cpp ../build//aura : : : <threading>multi ;
+
+# We disable this on this particular mingw / gcc combination because it has
+# bugs in the C++ throad local tear down support.
+run ct_lambda_test.cpp ../build//aura : : : <threading>multi <target-os>windows,<toolset-gcc:version>14:<build>no ;
+
 run ct_tlq_lifetime_test.cpp ../build//aura : : : <threading>multi ;
 run ct_wait_missed_wakeup_test.cpp ../build//aura : : : <threading>multi ;
 run ct_wait_test.cpp ../build//aura : : : <threading>multi ;

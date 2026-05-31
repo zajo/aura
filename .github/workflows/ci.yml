@@ -283,3 +283,44 @@ jobs:
         run: |
           cd test
           b2 -j3 --abbreviate-paths toolset=${{matrix.platform.toolset}} cxxstd=${{matrix.platform.cxxstd}} address-model=${{matrix.platform.addrmd}} variant=debug,release link=shared,static exception-handling=on,off
+
+  windows-mingw:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - sys: UCRT64
+            install: mingw-w64-ucrt-x86_64-gcc
+            cxxstd: "11,14,17,2a"
+            os: windows-2022
+          - sys: MINGW64
+            install: mingw-w64-x86_64-gcc
+            cxxstd: "11,14,17,2a"
+            os: windows-2022
+
+    name: ${{matrix.platform.os}} / mingw ${{matrix.platform.sys}}
+
+    runs-on: ${{matrix.platform.os}}
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.platform.sys}}
+          update: true
+          install: >-
+            ${{matrix.platform.install}}
+            git
+
+      - name: Build b2 and run tests
+        run: |
+          git clone --depth 1 https://github.com/boostorg/build.git ../boost-build
+          (cd ../boost-build && ./bootstrap.sh)
+          export PATH="$PWD/../boost-build:$PATH"
+          cd test
+          b2 -j3 --abbreviate-paths toolset=gcc cxxstd=${{matrix.platform.cxxstd}} variant=debug,release link=shared,static exception-handling=on,off
