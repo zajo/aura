@@ -1,0 +1,13 @@
+.DS_Store
+.Trashes
+bld/**
+doc/html/**
+*.suo
+*.user
+*.log
+*.sdf
+*.opensdf
+*.db
+*.opendb
+.vscode/c_cpp_properties.json
+.vscode/settings.json

@@ -1,0 +1,95 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Configure Meson build directories",
+			"type": "shell",
+			"command": "cd ${workspaceFolder} && meson -D aura_glfw_example=true bld/debug && meson -D aura_glfw_example=true bld/release --buildtype release",
+			"problemMatcher": []
+		},
+		{
+			"group": { "kind": "build", "isDefault": true },
+			"label": "Build all unit tests and examples",
+			"type": "shell",
+			"command": "cd ${workspaceFolder}/bld/debug && ninja",
+			"problemMatcher": {
+				"owner": "cpp",
+				"fileLocation": ["relative", "${workspaceFolder}/bld/debug"],
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			},
+			"windows": {
+				"command": "${workspaceFolder}/.vscode/msvc.bat && cd ${workspaceFolder}/bld/debug && ninja"
+			}
+		},
+		{
+			"group": "test",
+			"label": "Run all unit tests",
+			"type": "shell",
+			"command": "cd ${workspaceFolder}/bld/debug && meson test",
+			"problemMatcher": {
+				"owner": "cpp",
+				"fileLocation": ["relative", "${workspaceFolder}/bld/debug"],
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			},
+			"windows": {
+				"command": "${workspaceFolder}/.vscode/msvc.bat && cd ${workspaceFolder}/bld/debug && meson test"
+			}
+		},
+		{
+			"group": "test",
+			"label": "Run all unit tests (b2, all configurations)",
+			"type": "shell",
+			"command": "../../b2 test link=shared,static variant=debug,release exception-handling=on,off cxxstd=11,14,1z,17",
+			"problemMatcher": {
+				"owner": "cpp",
+				"fileLocation": ["relative", "${workspaceFolder}/bld/release"],
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			}
+		},
+		{
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"label": "Test current editor file",
+			"type": "shell",
+			"command": "cd ${workspaceFolder}/bld/debug && { meson test ${fileBasenameNoExtension} || cat ./meson-logs/testlog.txt; }",
+			"problemMatcher": {
+				"owner": "cpp",
+				"fileLocation": ["relative", "${workspaceFolder}/bld/debug"],
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				}
+			},
+			"windows": {
+				"command": "cd ${workspaceFolder}/bld/debug && (meson test ${fileBasenameNoExtension} || type .\\meson-logs\\testlog.txt)"
+			}
+		}
+	]
+}
