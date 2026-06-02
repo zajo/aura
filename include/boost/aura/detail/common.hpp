@@ -19,16 +19,16 @@ namespace detail
 {
     class subscription_list_list;
     class thread_local_event_data;
-    class args_binder_base;
+    class emit_args_binder;
     class subscription_base;
 
     std::shared_ptr<void const> & meta_source();
     using emit_meta_fn = int (*)(subscription_base &, unsigned);
 
-    using emit_fn = int(thread_local_event_data const &, void const *, args_binder_base const *);
+    using emit_fn = int(thread_local_event_data const &, void const *, emit_args_binder const *);
     using cleanup_fn = void(thread_local_event_data const &);
 
-    int emit_stub(thread_local_event_data const &, void const *, args_binder_base const *);
+    int emit_stub(thread_local_event_data const &, void const *, emit_args_binder const *);
     void cleanup_stub(thread_local_event_data const &);
 
     ////////////////////////////////////////
@@ -43,7 +43,7 @@ namespace detail
     public:
 
         virtual void notify_subscription_list_created(std::shared_ptr<thread_local_event_data> const &) = 0;
-        virtual int emit(thread_local_event_data const &, void const *, args_binder_base const *) = 0;
+        virtual int emit(thread_local_event_data const &, void const *, emit_args_binder const *) = 0;
     };
 
     ////////////////////////////////////////
@@ -101,7 +101,7 @@ namespace detail
             cleanup_(*this);
         }
 
-        static inline int emit_stub(thread_local_event_data const & tled, void const * s, args_binder_base const * args)
+        static inline int emit_stub(thread_local_event_data const & tled, void const * s, emit_args_binder const * args)
         {
             if (tled.sl_count_ && *tled.sl_count_)
                 if (cross_thread_interface * cross_thread = tled.cross_thread_->load())

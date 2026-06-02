@@ -18,62 +18,112 @@ namespace boost { namespace aurae {
 
 namespace detail
 {
-    template <class T>
-    struct arg_storage
-    {
-        typedef typename std::decay<T>::type type;
-    };
-
-    template <class T>
-    struct arg_storage<T &>
-    {
-        typedef std::reference_wrapper<T> type;
-    };
-
-    template <class T>
-    struct arg_storage<T const &>
-    {
-        typedef T type;
-    };
-
-    class args_binder_base
+    class args_binder
     {
     public:
 
-        virtual std::shared_ptr<args_binder_base> clone() const = 0;
         virtual void call(void const *) const = 0;
     };
 
+    class emit_args_binder:
+        public args_binder
+    {
+    public:
+
+        virtual std::shared_ptr<args_binder> clone() const = 0;
+    };
+
+    ////////////////////////////////////////
+
+    template <class T>
+    struct queued_arg_storage
+    {
+        using type = typename std::decay<T>::type;
+    };
+
+    template <class T>
+    struct queued_arg_storage<T &>
+    {
+        using type = std::reference_wrapper<T>;
+    };
+
+    template <class T>
+    struct queued_arg_storage<T const &>
+    {
+        using type = T;
+    };
+
     template <class Signature>
-    class args_binder;
+    class queued_args_binder;
 
     template <class... SigA>
-    class args_binder<void(SigA...)>:
-        public args_binder_base
+    class queued_args_binder<void(SigA...)> final:
+        public args_binder
     {
-        std::tuple<typename arg_storage<SigA>::type...> a_;
+        std::tuple<typename queued_arg_storage<SigA>::type...> a_;
 
-        std::shared_ptr<args_binder_base> clone() const final override
-        {
-            return std::make_shared<args_binder>(*this);
-        }
-
-        void call(void const * f) const final override
+        void call(void const * f) const override
         {
             detail_mp11::tuple_apply(*static_cast<std::function<void(SigA...)> const *>(f), a_);
         }
 
     public:
 
-        template <class... CallA>
-        args_binder(CallA && ... a):
-            a_(std::forward<CallA>(a)...)
+        template <class... A>
+        queued_args_binder(A && ... a):
+            a_(std::forward<A>(a)...)
         {
         }
     };
 
+    ////////////////////////////////////////
+
+    template <class A>
+    struct local_arg_ref
+    {
+        using type = A const &;
+    };
+
+    template <class A>
+    struct local_arg_ref<A &>
+    {
+        using type = A &;
+    };
+
+    template <class Signature, class... A>
+    class local_args_binder final:
+        public emit_args_binder
+    {
+        std::tuple<typename local_arg_ref<A>::type...> a_;
+
+        template <std::size_t... I>
+        std::shared_ptr<args_binder> clone_(detail_mp11::index_sequence<I...>) const
+        {
+            return std::make_shared<queued_args_binder<Signature>>(std::get<I>(a_)...);
+        }
+
+        std::shared_ptr<args_binder> clone() const override
+        {
+            return clone_(detail_mp11::make_index_sequence<sizeof...(A)>());
+        }
+
+        void call(void const * f) const override
+        {
+            detail_mp11::tuple_apply(*static_cast<std::function<Signature> const *>(f), a_);
+        }
+
+    public:
+
+        local_args_binder(typename local_arg_ref<A>::type... a):
+            a_(a...)
+        {
+        }
+    };
+
+    ////////////////////////////////////////
+
     template <class Event>
-    int emit_fwd(void const * s, args_binder_base const & args)
+    int emit_fwd(void const * s, emit_args_binder const & args)
     {
         if (std::shared_ptr<thread_local_event_data> const & tled = get_thread_local_event_data<Event>(false))
             if (s)
@@ -93,7 +143,7 @@ namespace detail
     template <class Event, class... A>
     int emit_dispatch(void const * s, A && ... a)
     {
-        return emit_fwd<Event>(s, args_binder<typename Event::signature>(std::forward<A>(a)...));
+        return emit_fwd<Event>(s, local_args_binder<typename Event::signature, A...>(std::forward<A>(a)...));
     }
 }
 

@@ -18,7 +18,7 @@ namespace boost { namespace aurae {
 
 namespace detail
 {
-    int emit_from_source(thread_local_event_data::subscription_list &, void const *, args_binder_base const *);
+    int emit_from_source(thread_local_event_data::subscription_list &, void const *, args_binder const *);
 
     class posted_events_wait_state
     {
@@ -46,11 +46,11 @@ namespace detail
         {
             unsigned serial_number;
             void const * s;
-            std::shared_ptr<args_binder_base> args;
+            std::shared_ptr<args_binder> args;
             posted()
             {
             }
-            posted(unsigned serial_number, void const * s, std::shared_ptr<args_binder_base> const & args):
+            posted(unsigned serial_number, void const * s, std::shared_ptr<args_binder> const & args):
                 serial_number(serial_number),
                 s(s),
                 args(args)
@@ -74,14 +74,14 @@ namespace detail
             BOOST_AURA_ASSERT(wait_state_);
         }
 
-        bool post(void const * s, args_binder_base const * args)
+        bool post(void const * s, emit_args_binder const * args)
         {
             BOOST_AURA_ASSERT(s != 0);
             if (thread_id_ == std::this_thread::get_id())
                 return false;
             else
             {
-                std::shared_ptr<args_binder_base> a;
+                std::shared_ptr<args_binder> a;
                 if (args)
                     a = args->clone();
                 {
@@ -171,7 +171,7 @@ namespace detail
             purge(same_event_different_threads_);
         }
 
-        int cross_thread_emit(void const * s, args_binder_base const * args)
+        int cross_thread_emit(void const * s, emit_args_binder const * args)
         {
             BOOST_AURA_ASSERT(s != 0);
             int count = 0;
@@ -322,7 +322,7 @@ namespace detail
                 get_thread_local_subscription_list_list()->notify_subscription_list_created(tled);
             }
 
-            int emit(thread_local_event_data const & tled, void const * s, args_binder_base const * args) final override
+            int emit(thread_local_event_data const & tled, void const * s, emit_args_binder const * args) final override
             {
                 return tled.get_sll_(&create_subscription_list_list)->cross_thread_emit(s, args);
             }

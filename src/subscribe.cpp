@@ -115,7 +115,7 @@ namespace detail
                 return next_;
             }
 
-            int emit(void const * s, args_binder_base const * args) const
+            int emit(void const * s, args_binder const * args) const
             {
                 BOOST_AURA_ASSERT(!is_free());
                 BOOST_AURA_ASSERT(s != 0);
@@ -194,7 +194,7 @@ namespace detail
             return idx >= 0 && idx < sub_.size();
         }
 
-        static int emit_impl(thread_local_event_data const & tled, void const * s, args_binder_base const * args)
+        static int emit_impl(thread_local_event_data const & tled, void const * s, emit_args_binder const * args)
         {
             BOOST_AURA_ASSERT(s != 0);
             int n = 0;
@@ -380,7 +380,7 @@ namespace detail
         std::shared_ptr<muting> find_muting_by_source(void const * s);
         bool has_source(void const * s) const;
 
-        int emit_from_source(void const * s, args_binder_base const * args)
+        int emit_from_source(void const * s, args_binder const * args)
         {
             BOOST_AURA_ASSERT(s != 0);
             return enumerate_recs([s, args](sub_rec const & r) { return r.emit(s, args); });
@@ -428,7 +428,7 @@ namespace detail
 
     ////////////////////////////////////////
 
-    int emit_from_source(thread_local_event_data::subscription_list & cl, void const * s, args_binder_base const * args)
+    int emit_from_source(thread_local_event_data::subscription_list & cl, void const * s, args_binder const * args)
     {
         return cl.emit_from_source(s, args);
     }

@@ -17,11 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - toolset: gcc-4.8
-            cxxstd: "11"
-            container: ubuntu:18.04
-            os: ubuntu-latest
-            install: g++-4.8
           - toolset: gcc-5
             cxxstd: "11,14,1z"
             container: ubuntu:18.04
@@ -324,3 +319,41 @@ jobs:
           export PATH="$PWD/../boost-build:$PATH"
           cd test
           b2 -j3 --abbreviate-paths toolset=gcc cxxstd=${{matrix.platform.cxxstd}} variant=debug,release link=shared,static exception-handling=on,off
+
+  sanitizers:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - sanitizer: address
+            cxxstd: "11,14,17,2a"
+            os: ubuntu-22.04
+          - sanitizer: thread
+            cxxstd: "11,14,17,2a"
+            os: ubuntu-22.04
+
+    name: ${{matrix.platform.os}} / ${{matrix.platform.sanitizer}}-sanitizer
+
+    runs-on: ${{matrix.platform.os}}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reduce ASLR entropy for sanitizers
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Install b2
+        run: |
+          git clone --depth 1 https://github.com/boostorg/build.git ../boost-build
+          cd ../boost-build
+          ./bootstrap.sh
+          echo "$PWD" >> $GITHUB_PATH
+
+      - name: Run tests
+        run: |
+          cd test
+          b2 -j3 toolset=gcc cxxstd=${{matrix.platform.cxxstd}} variant=debug ${{matrix.platform.sanitizer}}-sanitizer=norecover link=static threading=multi
